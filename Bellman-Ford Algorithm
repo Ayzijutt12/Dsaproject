@@ -1,0 +1,78 @@
+#include <iostream>
+#include <vector>
+#include <climits>
+
+class Graph {
+private:
+    int num_vertices;
+    std::vector<std::vector<int> > edges;
+
+public:
+    Graph(int num_vertices) : num_vertices(num_vertices) {
+        edges.resize(num_vertices, std::vector<int>(num_vertices, INT_MAX));
+    }
+
+    void add_edge(int u, int v, int weight) {
+        edges[u][v] = weight;
+    }
+
+    void display_graph() {
+        std::cout << "Adjacency Matrix:" << std::endl;
+        std::cout << "--------------------------" << std::endl;
+        for (int i = 0; i < num_vertices; ++i) {
+            for (int j = 0; j < num_vertices; ++j) {
+                if (edges[i][j] == INT_MAX) {
+                    std::cout << "INF\t";
+                } else {
+                    std::cout << edges[i][j] << "\t";
+                }
+            }
+            std::cout << std::endl;
+        }
+        std::cout << "--------------------------" << std::endl;
+    }
+
+    void bellman_ford(int start) {
+        std::vector<int> distance(num_vertices, INT_MAX);
+        distance[start] = 0;
+
+        for (int i = 0; i < num_vertices - 1; ++i) {
+            for (int u = 0; u < num_vertices; ++u) {
+                for (int v = 0; v < num_vertices; ++v) {
+                    if (edges[u][v] != INT_MAX && distance[u] != INT_MAX && distance[u] + edges[u][v] < distance[v]) {
+                        distance[v] = distance[u] + edges[u][v];
+                    }
+                }
+            }
+        }
+
+        std::cout << "Shortest Paths from Source " << start << " using Bellman-Ford Algorithm:" << std::endl;
+        for (int i = 0; i < num_vertices; ++i) {
+            if (distance[i] != INT_MAX) {
+                std::cout << "Distance to " << i << ": " << distance[i] << std::endl;
+            } else {
+                std::cout << "No path to " << i << std::endl;
+            }
+        }
+    }
+};
+
+int main() {
+    Graph graph(5); // Creating a graph with 5 vertices
+
+    // Adding edges to the graph
+    graph.add_edge(0, 1, 4);
+    graph.add_edge(0, 2, 1);
+    graph.add_edge(2, 1, 2);
+    graph.add_edge(1, 3, 1);
+    graph.add_edge(2, 3, 5);
+    graph.add_edge(3, 4, 3);
+
+    // Displaying the adjacency matrix
+    graph.display_graph();
+
+    // Finding the shortest paths using Bellman-Ford algorithm
+    graph.bellman_ford(0);
+
+    return 0;
+}
