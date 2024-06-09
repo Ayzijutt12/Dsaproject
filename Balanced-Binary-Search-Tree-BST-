@@ -1,0 +1,246 @@
+#include <iostream>
+#include <algorithm>
+
+// Node structure for AVL Tree
+struct Node {
+    int key;
+    Node* left;
+    Node* right;
+    int height;
+
+    Node(int value) : key(value), left(NULL), right(NULL), height(1) {}
+};
+
+// Function to get the height of the tree
+int height(Node* node) {
+    return node ? node->height : 0;
+}
+
+// Function to get the balance factor of the node
+int get_balance(Node* node) {
+    return node ? height(node->left) - height(node->right) : 0;
+}
+
+// Right rotate
+Node* right_rotate(Node* y) {
+    Node* x = y->left;
+    Node* T2 = x->right;
+
+    x->right = y;
+    y->left = T2;
+
+    y->height = std::max(height(y->left), height(y->right)) + 1;
+    x->height = std::max(height(x->left), height(x->right)) + 1;
+
+    return x;
+}
+
+// Left rotate
+Node* left_rotate(Node* x) {
+    Node* y = x->right;
+    Node* T2 = y->left;
+
+    y->left = x;
+    x->right = T2;
+
+    x->height = std::max(height(x->left), height(x->right)) + 1;
+    y->height = std::max(height(y->left), height(y->right)) + 1;
+
+    return y;
+}
+
+// Insert a node into the AVL tree
+Node* insert(Node* node, int key) {
+    if (!node) {
+        return new Node(key);
+    }
+
+    if (key < node->key) {
+        node->left = insert(node->left, key);
+    } else if (key > node->key) {
+        node->right = insert(node->right, key);
+    } else {
+        return node;
+    }
+
+    node->height = 1 + std::max(height(node->left), height(node->right));
+
+    int balance = get_balance(node);
+
+    // Left Left Case
+    if (balance > 1 && key < node->left->key) {
+        return right_rotate(node);
+    }
+
+    // Right Right Case
+    if (balance < -1 && key > node->right->key) {
+        return left_rotate(node);
+    }
+
+    // Left Right Case
+    if (balance > 1 && key > node->left->key) {
+        node->left = left_rotate(node->left);
+        return right_rotate(node);
+    }
+
+    // Right Left Case
+    if (balance < -1 && key < node->right->key) {
+        node->right = right_rotate(node->right);
+        return left_rotate(node);
+    }
+
+    return node;
+}
+
+// Find the node with the smallest value greater than a given node
+Node* min_value_node(Node* node) {
+    Node* current = node;
+
+    while (current->left) {
+        current = current->left;
+    }
+
+    return current;
+}
+
+// Delete a node from the AVL tree
+Node* delete_node(Node* root, int key) {
+    if (!root) {
+        return root;
+    }
+
+    if (key < root->key) {
+        root->left = delete_node(root->left, key);
+    } else if (key > root->key) {
+        root->right = delete_node(root->right, key);
+    } else {
+        if (!root->left || !root->right) {
+            Node* temp = root->left ? root->left : root->right;
+
+            if (!temp) {
+                temp = root;
+                root = NULL;
+            } else {
+                *root = *temp;
+            }
+            delete temp;
+        } else {
+            Node* temp = min_value_node(root->right);
+
+            root->key = temp->key;
+
+            root->right = delete_node(root->right, temp->key);
+        }
+    }
+
+    if (!root) {
+        return root;
+    }
+
+    root->height = 1 + std::max(height(root->left), height(root->right));
+
+    int balance = get_balance(root);
+
+    // Left Left Case
+    if (balance > 1 && get_balance(root->left) >= 0) {
+        return right_rotate(root);
+    }
+
+    // Left Right Case
+    if (balance > 1 && get_balance(root->left) < 0) {
+        root->left = left_rotate(root->left);
+        return right_rotate(root);
+    }
+
+    // Right Right Case
+    if (balance < -1 && get_balance(root->right) <= 0) {
+        return left_rotate(root);
+    }
+
+    // Right Left Case
+    if (balance < -1 && get_balance(root->right) > 0) {
+        root->right = right_rotate(root->right);
+        return left_rotate(root);
+    }
+
+    return root;
+}
+
+// Search for a node in the AVL tree
+bool search(Node* root, int key) {
+    if (!root) {
+        return false;
+    }
+
+    if (key < root->key) {
+        return search(root->left, key);
+    } else if (key > root->key) {
+        return search(root->right, key);
+    } else {
+        return true;
+    }
+}
+
+// In-order traversal
+void in_order(Node* root) {
+    if (root) {
+        in_order(root->left);
+        std::cout << root->key << " ";
+        in_order(root->right);
+    }
+}
+
+// Pre-order traversal
+void pre_order(Node* root) {
+    if (root) {
+        std::cout << root->key << " ";
+        pre_order(root->left);
+        pre_order(root->right);
+    }
+}
+
+// Post-order traversal
+void post_order(Node* root) {
+    if (root) {
+        post_order(root->left);
+        post_order(root->right);
+        std::cout << root->key << " ";
+    }
+}
+
+int main() {
+    Node* root = NULL;
+
+    root = insert(root, 10);
+    root = insert(root, 20);
+    root = insert(root, 30);
+    root = insert(root, 40);
+    root = insert(root, 50);
+    root = insert(root, 25);
+
+    std::cout << "In-order traversal of the constructed AVL tree is \n";
+    in_order(root);
+    std::cout << "\n";
+
+    std::cout << "Pre-order traversal of the constructed AVL tree is \n";
+    pre_order(root);
+    std::cout << "\n";
+
+    std::cout << "Post-order traversal of the constructed AVL tree is \n";
+    post_order(root);
+    std::cout << "\n";
+
+    root = delete_node(root, 10);
+
+    std::cout << "\nIn-order traversal after deletion of 10 \n";
+    in_order(root);
+    std::cout << "\n";
+
+    if (search(root, 20)) {
+        std::cout << "\nNode 20 found in the AVL tree\n";
+    } else {
+        std::cout << "\nNode 20 not found in the AVL tree\n";
+    }
+
+    return 0;
+}
